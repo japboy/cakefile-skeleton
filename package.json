@@ -1,0 +1,40 @@
+{
+  "name": "cakefile-skeleton",
+  "version": "0.0.1",
+  "author": "Yu Inao",
+  "description": "My starting point of working with Cakefile",
+  "contributors": [
+    {
+      "name": "Yu Inao",
+      "email": "yu.inao@facebook.com"
+    }
+  ],
+  "scripts": {
+    "start": "cake"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/japboy/cakefile-skeleton.git"
+  },
+  "dependencies": {
+    "coffee-script": ">= 1.4.0",
+    "docco": ">= 0.4.0"
+  },
+  "devDependencies": {
+    "assetgraph": ">= 1.2.4",
+    "csso": ">= 0.2.5",
+    "mocha": ">= 1.7.4",
+    "requirejs": ">= 2.1.2",
+    "stylus": ">= 0.31.0",
+    "uglify-js": ">= 1.3.4"
+  },
+  "bundleDependencies": [
+    "coffee-script",
+    "docco"
+  ],
+  "license": "Public Domain",
+  "engines": {
+    "node": "0.8",
+    "npm": "1.1"
+  }
+}
