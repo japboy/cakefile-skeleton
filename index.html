@@ -1,0 +1,397 @@
+<!DOCTYPE html>  <html> <head>   <title>Cakefile</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               Cakefile             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <p>cakefile-skeleton</p>
+
+<p>This Cakefile is a fork of <a href="https://github.com/twilson63/cakefile-template">cakefile-template</a> by <a href="https://github.com/twilson63">@twilson63</a>, and
+I modified the codes for my convention and added my basic functions for
+<a href="http://coffeescript.org/">CoffeeScript</a>, <a href="http://css.github.com/csso/">CSSO</a>, <a href="http://jade-lang.com/">Jade</a>, <a href="http://requirejs.org/">RequireJS</a>, <a href="http://sass-lang.com/">Sass</a>,
+<a href="http://learnboost.github.com/stylus/">Stylus</a>, <a href="https://github.com/mishoo/UglifyJS">UgilifyJS</a>, <a href="https://github.com/One-com/assetgraph">AssetGraph</a>, etc.</p>
+
+<p>Written and modified by <a href="https://github.com/japboy">@japboy</a> and distributed under
+the <a href="http://creativecommons.org/licenses/publicdomain/">Public Domain</a> in 2012.</p>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>Module dependencies</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">events = </span><span class="nx">require</span> <span class="s">&#39;events&#39;</span>
+<span class="nv">fs = </span><span class="nx">require</span> <span class="s">&#39;fs&#39;</span>
+<span class="p">{</span><span class="nx">print</span><span class="p">}</span> <span class="o">=</span> <span class="nx">require</span> <span class="s">&#39;util&#39;</span>
+<span class="p">{</span><span class="nx">spawn</span><span class="p">,</span> <span class="nx">exec</span><span class="p">}</span> <span class="o">=</span> <span class="nx">require</span> <span class="s">&#39;child_process&#39;</span>
+
+<span class="k">try</span>
+  <span class="nv">which = </span><span class="nx">require</span><span class="p">(</span><span class="s">&#39;which&#39;</span><span class="p">).</span><span class="nx">sync</span>
+<span class="k">catch</span> <span class="nx">err</span>
+  <span class="k">if</span> <span class="nx">process</span><span class="p">.</span><span class="nx">platform</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/^win/</span><span class="p">)</span><span class="o">?</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&#39;WARNING: the which module is required for windows\ntry: npm install which&#39;</span>
+  <span class="nv">which = </span><span class="kc">null</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>Path specifications</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">ROOT = </span><span class="s">&#39;.&#39;</span>
+<span class="nv">DOCCO_OUT_DIR = </span><span class="s">&quot;</span><span class="si">#{</span><span class="nx">ROOT</span><span class="si">}</span><span class="s">/docs&quot;</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>ANSI terminal styles</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">ANSI_BOLD = </span><span class="s">&#39;\x1b[0;1m&#39;</span>
+<span class="nv">ANSI_GREEN = </span><span class="s">&#39;\x1b[0;32m&#39;</span>
+<span class="nv">ANSI_RESET = </span><span class="s">&#39;\x1b[0m&#39;</span>
+<span class="nv">ANSI_RED = </span><span class="s">&#39;\x1b[0;31m&#39;</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>Namespace object</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">cake = </span><span class="k">new</span> <span class="nx">events</span><span class="p">.</span><span class="nx">EventEmitter</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <h2>Fundamental functions</h2>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <h3><em>moduleExists</em></h3>
+
+<p>Check if specified module is loadable or not</p>
+
+<p>Example:</p>
+
+<pre><code>return false if not moduleExists 'coffee-script'
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">moduleExists = </span><span class="nf">(name) -&gt;</span>
+  <span class="k">try</span>
+    <span class="nx">require</span> <span class="nx">name</span>
+  <span class="k">catch</span> <span class="nx">err</span>
+    <span class="nx">log</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">name</span><span class="si">}</span><span class="s"> required: npm install </span><span class="si">#{</span><span class="nx">name</span><span class="si">}</span><span class="s">&quot;</span><span class="p">,</span> <span class="nx">ANSI_RED</span>
+    <span class="k">return</span> <span class="kc">false</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <h3><em>launch</em></h3>
+
+<p>Run a command-line interface asynchronously.</p>
+
+<p>Example:</p>
+
+<pre><code>launch 'cd', ['/path/to'], -&gt;
+    launch 'ls', ['-laF']
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">launch = </span><span class="nf">(cmd, options=[], callback) -&gt;</span>
+  <span class="nv">cmd = </span><span class="nx">which</span><span class="p">(</span><span class="nx">cmd</span><span class="p">)</span> <span class="k">if</span> <span class="nx">which</span>
+  <span class="nv">app = </span><span class="nx">spawn</span> <span class="nx">cmd</span><span class="p">,</span> <span class="nx">options</span>
+
+  <span class="nx">app</span><span class="p">.</span><span class="kc">on</span> <span class="s">&#39;exit&#39;</span><span class="p">,</span> <span class="nf">(status) -&gt;</span> <span class="nx">callback</span><span class="o">?</span><span class="p">()</span> <span class="k">if</span> <span class="mi">0</span> <span class="o">is</span> <span class="nx">status</span>
+
+  <span class="nx">app</span><span class="p">.</span><span class="nx">stdout</span><span class="p">.</span><span class="nx">pipe</span> <span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span>
+  <span class="nx">app</span><span class="p">.</span><span class="nx">stderr</span><span class="p">.</span><span class="nx">pipe</span> <span class="nx">process</span><span class="p">.</span><span class="nx">stderr</span></pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <h3><em>walk</em></h3>
+
+<p>Walk through the path recursively and store the list of files.</p>
+
+<p>Example:</p>
+
+<pre><code>walk './path', (err, results) -&gt;
+    return err if err
+    console.log results
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">walk = </span><span class="nf">(dir, done) -&gt;</span>
+  <span class="nv">results = </span><span class="p">[]</span>
+
+  <span class="nx">fs</span><span class="p">.</span><span class="nx">readdir</span> <span class="nx">dir</span><span class="p">,</span> <span class="nf">(err, list) -&gt;</span>
+    <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="p">[])</span> <span class="k">if</span> <span class="nx">err</span>
+
+    <span class="nv">pending = </span><span class="nx">list</span><span class="p">.</span><span class="nx">length</span>
+
+    <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">results</span><span class="p">)</span> <span class="nx">unless</span> <span class="nx">pending</span>
+
+    <span class="k">for</span> <span class="nx">name</span> <span class="k">in</span> <span class="nx">list</span>
+      <span class="nv">file = </span><span class="s">&quot;</span><span class="si">#{</span><span class="nx">dir</span><span class="si">}</span><span class="s">/</span><span class="si">#{</span><span class="nx">name</span><span class="si">}</span><span class="s">&quot;</span>
+
+      <span class="k">try</span>
+        <span class="nv">stat = </span><span class="nx">fs</span><span class="p">.</span><span class="nx">statSync</span> <span class="nx">file</span>
+      <span class="k">catch</span> <span class="nx">err</span>
+        <span class="nv">stat = </span><span class="kc">null</span>
+
+      <span class="k">if</span> <span class="nx">stat</span><span class="o">?</span><span class="p">.</span><span class="nx">isDirectory</span><span class="p">()</span>
+        <span class="nx">walk</span> <span class="nx">file</span><span class="p">,</span> <span class="nf">(err, res) -&gt;</span>
+          <span class="nx">results</span><span class="p">.</span><span class="nx">push</span> <span class="nx">name</span> <span class="k">for</span> <span class="nx">name</span> <span class="k">in</span> <span class="nx">res</span>
+          <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">results</span><span class="p">)</span> <span class="nx">unless</span> <span class="o">--</span><span class="nx">pending</span>
+      <span class="k">else</span>
+        <span class="nx">results</span><span class="p">.</span><span class="nx">push</span> <span class="nx">file</span>
+        <span class="nx">done</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">results</span><span class="p">)</span> <span class="nx">unless</span> <span class="o">--</span><span class="nx">pending</span></pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <h3><em>log</em></h3>
+
+<p>Example:</p>
+
+<pre><code>log 'All green :)', ANSI_GREEN
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">log = </span><span class="nf">(message, color, explanation) -&gt;</span>
+  <span class="k">if</span> <span class="nx">moduleExists</span> <span class="s">&#39;growl&#39;</span>
+    <span class="nv">_growl = </span><span class="nx">require</span> <span class="s">&#39;growl&#39;</span>
+
+    <span class="nx">_growl</span><span class="p">(</span><span class="nx">message</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="nx">explanation</span> <span class="o">or</span> <span class="s">&#39;&#39;</span><span class="p">))</span>
+
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">color</span> <span class="o">+</span> <span class="nx">message</span> <span class="o">+</span> <span class="nx">ANSI_RESET</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="nx">explanation</span> <span class="o">or</span> <span class="s">&#39;&#39;</span><span class="p">))</span></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <h2>Functions for preprocessors</h2>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <h3><em>coffee</em></h3>
+
+<p>Read <code>.coffee</code> file and compile it to a new <code>.js</code> file.</p>
+
+<p>Example:</p>
+
+<pre><code>coffee data, file, (err, result, newFile) -&gt;
+    return err if err
+    console.log result, newFile
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">coffee = </span><span class="nf">(data, path, done) -&gt;</span>
+  <span class="k">if</span> <span class="o">not</span> <span class="nx">moduleExists</span> <span class="s">&#39;coffee-script&#39;</span>
+    <span class="k">return</span> <span class="nx">done</span> <span class="s">&#39;No CoffeeScript module found&#39;</span><span class="p">,</span> <span class="kc">undefined</span><span class="p">,</span> <span class="kc">undefined</span>
+
+  <span class="nv">_coffee = </span><span class="nx">require</span> <span class="s">&#39;coffee-script&#39;</span>
+  <span class="nv">result = </span><span class="nx">_coffee</span><span class="p">.</span><span class="nx">compile</span> <span class="nx">data</span>
+
+  <span class="nv">path = </span><span class="nx">path</span><span class="p">.</span><span class="nx">replace</span> <span class="sr">/\.coffee$/</span><span class="p">,</span> <span class="s">&#39;.js&#39;</span>
+
+  <span class="nx">done</span> <span class="kc">undefined</span><span class="p">,</span> <span class="nx">result</span><span class="p">,</span> <span class="nx">path</span></pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <h3><em>jade</em></h3>
+
+<p>Read <code>.jade</code> file and compile it to a new <code>.html</code> file.</p>
+
+<p>Example:</p>
+
+<pre><code>jade data, file, (err, result, newFile) -&gt;
+    return err if err
+    console.log result, newFile
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">jade = </span><span class="nf">(data, path, done) -&gt;</span>
+  <span class="k">if</span> <span class="o">not</span> <span class="nx">moduleExists</span> <span class="s">&#39;jade&#39;</span>
+    <span class="k">return</span> <span class="nx">done</span> <span class="s">&#39;No Jade module found&#39;</span><span class="p">,</span> <span class="kc">undefined</span><span class="p">,</span> <span class="kc">undefined</span>
+
+  <span class="nv">_jade = </span><span class="nx">require</span> <span class="s">&#39;jade&#39;</span>
+  <span class="nv">html = </span><span class="nx">_jade</span><span class="p">.</span><span class="nx">compile</span> <span class="nx">data</span><span class="p">,</span> <span class="p">{</span> <span class="nv">filename: </span><span class="nx">path</span><span class="p">,</span> <span class="nv">pretty: </span><span class="kc">true</span> <span class="p">}</span>
+  <span class="nv">result = </span><span class="nx">html</span><span class="p">()</span>
+
+  <span class="nv">path = </span><span class="nx">path</span><span class="p">.</span><span class="nx">replace</span> <span class="sr">/\.jade$/</span><span class="p">,</span> <span class="s">&#39;.html&#39;</span>
+
+  <span class="nx">done</span> <span class="kc">undefined</span><span class="p">,</span> <span class="nx">result</span><span class="p">,</span> <span class="nx">path</span></pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <h3><em>stylus</em></h3>
+
+<p>Read <code>.styl</code> file and compile it to a new <code>.css</code> file.</p>
+
+<p>Example:</p>
+
+<pre><code>stylus data, file, (err, result, newFile) -&gt;
+    return err if err
+    console.log result, newFile
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">stylus = </span><span class="nf">(data, path, done) -&gt;</span>
+  <span class="k">if</span> <span class="o">not</span> <span class="nx">moduleExists</span><span class="p">(</span><span class="s">&#39;stylus&#39;</span><span class="p">)</span> <span class="o">or</span> <span class="o">not</span> <span class="nx">moduleExists</span><span class="p">(</span><span class="s">&#39;nib&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nx">done</span> <span class="s">&#39;No Stylus module found&#39;</span><span class="p">,</span> <span class="kc">undefined</span><span class="p">,</span> <span class="kc">undefined</span>
+
+  <span class="nv">_stylus = </span><span class="nx">require</span> <span class="s">&#39;stylus&#39;</span>
+  <span class="nv">_nib = </span><span class="nx">require</span> <span class="s">&#39;nib&#39;</span>
+
+  <span class="nx">_stylus</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s">&#39;filename&#39;</span><span class="p">,</span> <span class="nx">path</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s">&#39;compress&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">_nib</span><span class="p">())</span>
+  <span class="p">.</span><span class="nx">render</span> <span class="nf">(err, result) -&gt;</span>
+    <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="kc">undefined</span><span class="p">,</span> <span class="kc">undefined</span><span class="p">)</span> <span class="k">if</span> <span class="nx">err</span>
+
+    <span class="nv">path = </span><span class="nx">path</span><span class="p">.</span><span class="nx">replace</span> <span class="sr">/\.styl$/</span><span class="p">,</span> <span class="s">&#39;.css&#39;</span>
+
+    <span class="nx">done</span> <span class="kc">undefined</span><span class="p">,</span> <span class="nx">result</span><span class="p">,</span> <span class="nx">path</span></pre></div>             </td>           </tr>                               <tr id="section-15">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-15">&#182;</a>               </div>               <h2>Abstract functions for preprocessors</h2>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-16">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-16">&#182;</a>               </div>               <h3><em>type</em></h3>
+
+<p>Return the object of file type and token from the specified path.</p>
+
+<p>Example:</p>
+
+<pre><code>actual = type '/path/to/file.coffee'
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">type = </span><span class="nf">(path) -&gt;</span>
+  <span class="nv">formats =</span>
+    <span class="s">&#39;coffee&#39;</span><span class="o">:</span> <span class="sr">/\/?(.+\.coffee$)/</span>
+    <span class="s">&#39;jade&#39;</span><span class="o">:</span> <span class="sr">/\/?(.+\.jade$)/</span>
+    <span class="s">&#39;stylus&#39;</span><span class="o">:</span> <span class="sr">/\/?(.+\.styl$)/</span>
+
+  <span class="k">for</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">val</span> <span class="k">of</span> <span class="nx">formats</span>
+    <span class="k">if</span> <span class="nx">path</span><span class="p">.</span><span class="nx">match</span> <span class="nx">val</span>
+      <span class="nv">obj = </span><span class="p">{}</span>
+      <span class="nx">obj</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">val</span>
+      <span class="k">return</span> <span class="nx">obj</span>
+
+  <span class="k">return</span> <span class="kc">undefined</span></pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-17">&#182;</a>               </div>               <h3><em>filter</em></h3>
+
+<p>Filter out non-targets in the files.</p>
+
+<p>Example:</p>
+
+<pre><code>filter ['a.txt', 'b.coffee', 'c.styl'], (err, results) -&gt;
+    return err if err
+    console.log results
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">filter = </span><span class="nf">(paths, done) -&gt;</span>
+  <span class="nv">results = </span><span class="p">[]</span>
+
+  <span class="k">for</span> <span class="nx">path</span> <span class="k">in</span> <span class="nx">paths</span>
+    <span class="nx">results</span><span class="p">.</span><span class="nx">push</span> <span class="nx">path</span> <span class="k">if</span> <span class="nx">type</span> <span class="nx">path</span>
+
+  <span class="k">return</span> <span class="nx">done</span> <span class="s">&#39;No targets found&#39;</span><span class="p">,</span> <span class="kc">undefined</span> <span class="k">if</span> <span class="mi">0</span> <span class="o">is</span> <span class="nx">results</span><span class="p">.</span><span class="nx">length</span>
+
+  <span class="nx">done</span> <span class="kc">undefined</span><span class="p">,</span> <span class="nx">results</span></pre></div>             </td>           </tr>                               <tr id="section-18">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-18">&#182;</a>               </div>               <h3><em>compile</em></h3>
+
+<p>Read a file and compile it with specific mixin function, then
+write it to a new file at the same path of the original.</p>
+
+<p>TODO: Add header string to the compiled string <br />
+TODO: Skip if the content is not updated</p>
+
+<p>Example:</p>
+
+<pre><code>compile './a.coffee', coffee, (err, path) -&gt;
+    return err if err
+    console.log path
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">compile = </span><span class="nf">(file, mixin, done) -&gt;</span>
+  <span class="nv">encoding = </span><span class="s">&#39;utf8&#39;</span>
+
+  <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span> <span class="nx">file</span><span class="p">,</span> <span class="nx">encoding</span><span class="p">,</span> <span class="nf">(err, data) -&gt;</span>
+    <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">file</span><span class="p">)</span> <span class="k">if</span> <span class="nx">err</span>
+
+    <span class="nx">mixin</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">file</span><span class="p">,</span> <span class="nf">(err, result, newFile) -&gt;</span>
+      <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">file</span><span class="p">)</span> <span class="k">if</span> <span class="nx">err</span>
+
+      <span class="nx">fs</span><span class="p">.</span><span class="nx">writeFile</span> <span class="nx">newFile</span><span class="p">,</span> <span class="nx">result</span><span class="p">,</span> <span class="nx">encoding</span><span class="p">,</span> <span class="nf">(err) -&gt;</span>
+        <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">newFile</span><span class="p">)</span> <span class="k">if</span> <span class="nx">err</span>
+
+        <span class="nx">done</span> <span class="kc">undefined</span><span class="p">,</span> <span class="nx">newFile</span></pre></div>             </td>           </tr>                               <tr id="section-19">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-19">&#182;</a>               </div>               <h3><em>runCompiler</em></h3>
+
+<p>Call proper compiler for the specified file.</p>
+
+<p>Example:</p>
+
+<pre><code>runCompiler file, (err, path) -&gt;
+    return err if err
+    console.log path
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">runCompiler = </span><span class="nf">(file, done) -&gt;</span>
+  <span class="nv">_type = </span><span class="nx">type</span> <span class="nx">file</span>
+
+  <span class="k">return</span> <span class="nx">done</span> <span class="s">&#39;Unable to compile the invalid file&#39;</span><span class="p">,</span> <span class="nx">file</span> <span class="k">if</span> <span class="o">not</span> <span class="nx">_type</span>
+
+  <span class="k">if</span> <span class="nx">_type</span><span class="p">[</span><span class="s">&#39;coffee&#39;</span><span class="p">]</span>
+    <span class="nx">compile</span> <span class="nx">file</span><span class="p">,</span> <span class="nx">coffee</span><span class="p">,</span> <span class="nf">(err, newFile) -&gt;</span>
+      <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">file</span><span class="p">)</span> <span class="k">if</span> <span class="nx">err</span>
+      <span class="k">return</span> <span class="nx">done</span> <span class="kc">undefined</span><span class="p">,</span> <span class="nx">newFile</span>
+
+  <span class="k">if</span> <span class="nx">_type</span><span class="p">[</span><span class="s">&#39;jade&#39;</span><span class="p">]</span>
+    <span class="nx">compile</span> <span class="nx">file</span><span class="p">,</span> <span class="nx">jade</span><span class="p">,</span> <span class="nf">(err, newFile) -&gt;</span>
+      <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">file</span><span class="p">)</span> <span class="k">if</span> <span class="nx">err</span>
+      <span class="k">return</span> <span class="nx">done</span> <span class="kc">undefined</span><span class="p">,</span> <span class="nx">newFile</span>
+
+  <span class="k">if</span> <span class="nx">_type</span><span class="p">[</span><span class="s">&#39;stylus&#39;</span><span class="p">]</span>
+    <span class="nx">compile</span> <span class="nx">file</span><span class="p">,</span> <span class="nx">stylus</span><span class="p">,</span> <span class="nf">(err, newFile) -&gt;</span>
+      <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">file</span><span class="p">)</span> <span class="k">if</span> <span class="nx">err</span>
+      <span class="k">return</span> <span class="nx">done</span> <span class="kc">undefined</span><span class="p">,</span> <span class="nx">newFile</span></pre></div>             </td>           </tr>                               <tr id="section-20">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-20">&#182;</a>               </div>               <h2>Functions for command-line interface</h2>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-21">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-21">&#182;</a>               </div>               <h3><em>docco</em></h3>
+
+<p>Run <code>docco</code> command to generate the documentation.</p>
+
+<p>Example:</p>
+
+<pre><code>docco()
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">docco = </span><span class="nf">(callback) -&gt;</span>
+  <span class="nx">walk</span> <span class="nx">ROOT</span><span class="p">,</span> <span class="nf">(err, files) -&gt;</span>
+    <span class="k">return</span> <span class="nx">log</span> <span class="s">&quot;Error: </span><span class="si">#{</span><span class="nx">err</span><span class="si">}</span><span class="s">&quot;</span><span class="p">,</span> <span class="nx">ANSI_RED</span> <span class="k">if</span> <span class="nx">err</span>
+
+    <span class="nx">launch</span> <span class="s">&#39;cp&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-f&#39;</span><span class="p">,</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">ROOT</span><span class="si">}</span><span class="s">/Cakefile&quot;</span><span class="p">,</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">ROOT</span><span class="si">}</span><span class="s">/Cakefile&quot;</span><span class="p">],</span> <span class="o">-&gt;</span>
+      <span class="nx">launch</span> <span class="s">&#39;docco&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;--output&#39;</span><span class="p">,</span> <span class="nx">DOCCO_OUT_DIR</span><span class="p">,</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">ROOT</span><span class="si">}</span><span class="s">/Cakefile&quot;</span><span class="p">],</span> <span class="o">-&gt;</span>
+        <span class="nx">launch</span> <span class="s">&#39;rm&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;-f&#39;</span><span class="p">,</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">ROOT</span><span class="si">}</span><span class="s">/Cakefile&quot;</span><span class="p">]</span></pre></div>             </td>           </tr>                               <tr id="section-22">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-22">&#182;</a>               </div>               <h3><em>mocha</em></h3>
+
+<p>Run JSUnit test by <code>mocha</code></p>
+
+<p>Example:</p>
+
+<pre><code>mocha()
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">mocha = </span><span class="nf">(options, callback) -&gt;</span>
+  <span class="k">if</span> <span class="s">&#39;function&#39;</span> <span class="o">is</span> <span class="k">typeof</span> <span class="nx">options</span>
+    <span class="nv">callback = </span><span class="nx">options</span>
+    <span class="nv">options = </span><span class="p">[]</span>
+
+  <span class="nx">options</span><span class="p">.</span><span class="nx">push</span> <span class="s">&#39;--compilers&#39;</span>
+  <span class="nx">options</span><span class="p">.</span><span class="nx">push</span> <span class="s">&#39;coffee:coffee-script&#39;</span>
+
+  <span class="nx">launch</span> <span class="s">&#39;mocha&#39;</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="nx">callback</span></pre></div>             </td>           </tr>                               <tr id="section-23">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-23">&#182;</a>               </div>               <h2>Internal functions</h2>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-24">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-24">&#182;</a>               </div>               <h3><em>build</em></h3>
+
+<p>Compile and generate files if they are updated.</p>
+
+<p>Example:</p>
+
+<pre><code>build()
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">build = </span><span class="nf">(watch, callback) -&gt;</span>
+  <span class="k">if</span> <span class="s">&#39;function&#39;</span> <span class="o">is</span> <span class="k">typeof</span> <span class="nx">watch</span>
+    <span class="nv">callback = </span><span class="nx">watch</span>
+    <span class="nv">watch = </span><span class="kc">false</span>
+
+  <span class="nx">walk</span> <span class="nx">ROOT</span><span class="p">,</span> <span class="nf">(err, files) -&gt;</span>
+    <span class="k">return</span> <span class="nx">log</span><span class="p">(</span><span class="s">&quot;Error: </span><span class="si">#{</span><span class="nx">err</span><span class="si">}</span><span class="s">&quot;</span><span class="p">,</span> <span class="nx">ANSI_RED</span><span class="p">)</span> <span class="k">if</span> <span class="nx">err</span>
+
+    <span class="nx">filter</span> <span class="nx">files</span><span class="p">,</span> <span class="nf">(err, results) -&gt;</span>
+      <span class="k">return</span> <span class="nx">log</span><span class="p">(</span><span class="s">&quot;Error: </span><span class="si">#{</span><span class="nx">err</span><span class="si">}</span><span class="s">&quot;</span><span class="p">,</span> <span class="nx">ANSI_RED</span><span class="p">)</span> <span class="k">if</span> <span class="nx">err</span>
+
+      <span class="nv">pending = </span><span class="nx">results</span><span class="p">.</span><span class="nx">length</span>
+
+      <span class="nx">cake</span><span class="p">.</span><span class="nx">once</span> <span class="s">&#39;built&#39;</span><span class="p">,</span> <span class="o">-&gt;</span>
+        <span class="nx">log</span> <span class="s">&#39;All the build process done.&#39;</span><span class="p">,</span> <span class="nx">ANSI_BOLD</span>
+        <span class="nx">callback</span> <span class="kc">undefined</span>
+
+      <span class="k">for</span> <span class="nx">result</span> <span class="k">in</span> <span class="nx">results</span>
+        <span class="nx">runCompiler</span> <span class="nx">result</span><span class="p">,</span> <span class="nf">(err, newFile) -&gt;</span>
+          <span class="k">return</span> <span class="nx">log</span><span class="p">(</span><span class="s">&quot;Error: </span><span class="si">#{</span><span class="nx">err</span><span class="si">}</span><span class="s">, </span><span class="si">#{</span><span class="nx">newFile</span><span class="si">}</span><span class="s">&quot;</span><span class="p">,</span> <span class="nx">ANSI_RED</span><span class="p">)</span> <span class="k">if</span> <span class="nx">err</span>
+
+          <span class="nx">log</span> <span class="s">&quot;Compiled </span><span class="si">#{</span><span class="nx">newFile</span><span class="si">}</span><span class="s">&quot;</span><span class="p">,</span> <span class="nx">ANSI_GREEN</span>
+          <span class="nx">cake</span><span class="p">.</span><span class="nx">emit</span> <span class="s">&#39;built&#39;</span> <span class="k">if</span> <span class="mi">0</span> <span class="o">is</span> <span class="o">--</span><span class="nx">pending</span></pre></div>             </td>           </tr>                               <tr id="section-25">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-25">&#182;</a>               </div>               <h3><em>clean</em></h3>
+
+<p>Remove all the generated file.</p>
+
+<p>TODO: Prevent to unlink the original files</p>
+
+<p>Example:</p>
+
+<pre><code>clean()
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">clean = </span><span class="nf">(callback) -&gt;</span>
+  <span class="nx">callback</span><span class="o">?</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-26">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-26">&#182;</a>               </div>               <h3><em>concat</em></h3>
+
+<p>Concatenates source files into a destination file.</p>
+
+<p>TODO: Skip if files are not updated</p>
+
+<p>Example:</p>
+
+<pre><code>concat ['./a.js', './b/c.js'], './app.js'
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">concat = </span><span class="nf">(sources, destination, done) -&gt;</span>
+  <span class="nv">encoding = </span><span class="s">&#39;utf8&#39;</span>
+  <span class="nv">pending = </span><span class="nx">sources</span><span class="p">.</span><span class="nx">length</span>
+  <span class="nv">buf = </span><span class="s">&#39;&#39;</span>
+
+  <span class="nx">cake</span><span class="p">.</span><span class="nx">once</span> <span class="s">&#39;concatenated&#39;</span><span class="p">,</span> <span class="o">-&gt;</span>
+    <span class="nx">fs</span><span class="p">.</span><span class="nx">writeFile</span> <span class="nx">destination</span><span class="p">,</span> <span class="nx">buf</span><span class="p">,</span> <span class="nx">encoding</span><span class="p">,</span> <span class="nf">(err) -&gt;</span>
+      <span class="k">return</span> <span class="nx">log</span> <span class="s">&quot;Error: </span><span class="si">#{</span><span class="nx">err</span><span class="si">}</span><span class="s">&quot;</span><span class="p">,</span> <span class="nx">ANSI_RED</span> <span class="k">if</span> <span class="nx">err</span>
+
+      <span class="nx">log</span> <span class="s">&quot;Concatenated to </span><span class="si">#{</span><span class="nx">destination</span><span class="si">}</span><span class="s">&quot;</span><span class="p">,</span> <span class="nx">ANSI_GREEN</span>
+      <span class="nx">log</span> <span class="s">&#39;All the concatenation process done.&#39;</span><span class="p">,</span> <span class="nx">ANSI_BOLD</span>
+      <span class="nx">done</span> <span class="kc">undefined</span>
+
+  <span class="k">for</span> <span class="nx">file</span> <span class="k">in</span> <span class="nx">sources</span>
+    <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span> <span class="nx">file</span><span class="p">,</span> <span class="nx">encoding</span><span class="p">,</span> <span class="nf">(err, data) -&gt;</span>
+      <span class="k">return</span> <span class="nx">log</span> <span class="s">&quot;Error: </span><span class="si">#{</span><span class="nx">err</span><span class="si">}</span><span class="s">&quot;</span><span class="p">,</span> <span class="nx">ANSI_RED</span> <span class="k">if</span> <span class="nx">err</span>
+
+      <span class="nx">buf</span> <span class="o">+=</span> <span class="nx">data</span>
+
+      <span class="nx">cake</span><span class="p">.</span><span class="nx">emit</span> <span class="s">&#39;concatenated&#39;</span> <span class="k">if</span> <span class="mi">0</span> <span class="o">is</span> <span class="o">--</span><span class="nx">pending</span></pre></div>             </td>           </tr>                               <tr id="section-27">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-27">&#182;</a>               </div>               <h2>Cakefile tasks</h2>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-28">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-28">&#182;</a>               </div>               <h3><em>build</em></h3>
+
+<p>Builds source</p>
+
+<p>Command:</p>
+
+<pre><code>cake build
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nx">task</span> <span class="s">&#39;build&#39;</span><span class="p">,</span> <span class="s">&#39;compile source&#39;</span><span class="p">,</span> <span class="o">-&gt;</span>
+  <span class="nx">build</span> <span class="o">-&gt;</span>
+    <span class="nx">log</span> <span class="s">&#39;:)&#39;</span><span class="p">,</span> <span class="nx">ANSI_GREEN</span></pre></div>             </td>           </tr>                               <tr id="section-29">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-29">&#182;</a>               </div>               <h3><em>concat</em></h3>
+
+<p>Builds and concatenates</p>
+
+<p>Command:</p>
+
+<pre><code>cake concat
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nx">task</span> <span class="s">&#39;concat&#39;</span><span class="p">,</span> <span class="s">&#39;concatenate source&#39;</span><span class="p">,</span> <span class="nf">(args...) -&gt;</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="nx">args</span>
+  <span class="nx">build</span> <span class="o">-&gt;</span>
+    <span class="nx">concat</span> <span class="p">[</span><span class="s">&quot;</span><span class="si">#{</span><span class="nx">ROOT</span><span class="si">}</span><span class="s">/test/template.html&quot;</span><span class="p">,</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">ROOT</span><span class="si">}</span><span class="s">/test/parallax.html&quot;</span><span class="p">],</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">ROOT</span><span class="si">}</span><span class="s">/app.html&quot;</span><span class="p">,</span> <span class="o">-&gt;</span>
+      <span class="nx">log</span> <span class="s">&#39;:)&#39;</span><span class="p">,</span> <span class="nx">ANSI_GREEN</span></pre></div>             </td>           </tr>                               <tr id="section-30">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-30">&#182;</a>               </div>               <h3><em>watch</em></h3>
+
+<p>Builds source whenever it changes</p>
+
+<p>Command:</p>
+
+<pre><code>cake watch
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nx">task</span> <span class="s">&#39;watch&#39;</span><span class="p">,</span> <span class="s">&#39;compile and watch&#39;</span><span class="p">,</span> <span class="o">-&gt;</span>
+  <span class="nx">build</span> <span class="kc">true</span><span class="p">,</span> <span class="o">-&gt;</span>
+    <span class="nx">log</span> <span class="s">&#39;:-)&#39;</span><span class="p">,</span> <span class="nx">ANSI_GREEN</span></pre></div>             </td>           </tr>                               <tr id="section-31">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-31">&#182;</a>               </div>               <h3><em>test</em></h3>
+
+<p>Runs test suite</p>
+
+<p>Command:</p>
+
+<pre><code>cake test
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nx">task</span> <span class="s">&#39;test&#39;</span><span class="p">,</span> <span class="s">&#39;run tests&#39;</span><span class="p">,</span> <span class="o">-&gt;</span>
+  <span class="nx">build</span> <span class="o">-&gt;</span>
+    <span class="nx">mocha</span> <span class="o">-&gt;</span>
+      <span class="nx">log</span> <span class="s">&#39;:)&#39;</span><span class="p">,</span> <span class="nx">ANSI_GREEN</span></pre></div>             </td>           </tr>                               <tr id="section-32">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-32">&#182;</a>               </div>               <h3><em>docs</em></h3>
+
+<p>Generate annotated documentation</p>
+
+<p>Command:</p>
+
+<pre><code>cake docs
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nx">task</span> <span class="s">&#39;docs&#39;</span><span class="p">,</span> <span class="s">&#39;generate documentation&#39;</span><span class="p">,</span> <span class="o">-&gt;</span>
+  <span class="nx">docco</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-33">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-33">&#182;</a>               </div>               <h3><em>clean</em></h3>
+
+<p>Cleans up generated JavaScript files</p>
+
+<p>Command:</p>
+
+<pre><code>cake clean
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nx">task</span> <span class="s">&#39;clean&#39;</span><span class="p">,</span> <span class="s">&#39;clean generated files&#39;</span><span class="p">,</span> <span class="o">-&gt;</span>
+  <span class="nx">clean</span> <span class="o">-&gt;</span>
+    <span class="nx">log</span> <span class="s">&#39;;)&#39;</span><span class="p">,</span> <span class="nx">ANSI_GREEN</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 
