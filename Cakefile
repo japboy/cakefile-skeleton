@@ -265,7 +265,6 @@ filter = (paths, done) ->
 # write it to a new file at the same path of the original.
 #
 # TODO: Add header string to the compiled string  
-# TODO: Skip if the content is not updated
 #
 # Example:
 #
@@ -276,16 +275,23 @@ filter = (paths, done) ->
 compile = (file, mixin, done) ->
   encoding = 'utf8'
 
-  fs.readFile file, encoding, (err, data) ->
+  fs.readFile file, encoding, (err, sourceData) ->
     return done(err, file) if err
 
-    mixin data, file, (err, result, newFile) ->
+    mixin sourceData, file, (err, processedData, processedFile) ->
       return done(err, file) if err
 
-      fs.writeFile newFile, result, encoding, (err) ->
-        return done(err, newFile) if err
+      fs.readFile processedFile, encoding, (err, originalProcessedData) ->
+        return done(err, processedFile) if err
 
-        done undefined, newFile
+        # TODO: Compare without header
+        if processedData is originalProcessedData
+          return done(undefined, undefined)
+
+        fs.writeFile processedFile, processedData, encoding, (err) ->
+          return done(err, processedFile) if err
+
+          done undefined, processedFile
 
 # ### *runCompiler*
 #
